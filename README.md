@@ -21,3 +21,11 @@ Debuggear errores en la emisión
 ``` bash       
     docker exec -it nginx-stream netstat -tulnp
 ```
+pasos para la ejecución y el despliegue y redespliegue de la aplicación:
+se para y elimina el contenedor.
+``` bash
+docker stop nginx-stream
+docker rm nginx-stream
+``` 
+se construye (paso 1) y se ejecuta el contenedor (paso 2).
+para probarlo se 
