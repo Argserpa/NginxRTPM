@@ -10,8 +10,8 @@ Explicación de los parámetros:
  - -p 1935:1935 mapea el puerto RTMP del host al contenedor
  - -p 80:80 mapea el puerto HTTP del host al contenedor
  - --name nginx-stream para darle un nombre al contenedor
-``` bash
-    docker run -d -p 1935:1935 -p 80:80 --name nginx-stream nginx-rtmp-server
+``` bash    
+    docker run -d -p 1935:1935 -p 80:80 -p 443:443 --name nginx-stream nginx-rtmp-server
 ```
 ejecutar bash del contenedor
 ``` bash
