@@ -1,0 +1,83 @@
+
+services:
+  # Your Nginx Streaming Server
+  nginx-stream:
+    image: nginx-rtmp-server  # This should be the image you built
+    container_name: nginx_streaming_server # Give it a unique name
+    ports:
+      - "1935:1935"
+      - "80:80"
+      - "443:443"
+    volumes:
+    # If you uncomment these, make sure they start with a hyphen (-)
+    - ../nginx.conf:/usr/local/nginx/conf/nginx.conf
+    - ../certs:/usr/local/nginx/certs
+    restart: unless-stopped
+    networks:
+      - streaming_network # Attach to the streaming network
+      # - monitoring_network # Optional: If you want Prometheus to scrape directly on this network too
+
+  # Nginx Prometheus Exporter
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    container_name: nginx_prometheus_exporter
+    ports:
+      - "9113:9113"
+    environment:
+      # Now, 'nginx-stream' is the service name within this docker-compose file's network
+      NGINX_STUB_STATUS_URL: http://nginx-stream:80/nginx_status
+    restart: unless-stopped
+    networks:
+      - monitoring_network
+      - streaming_network # It needs to be on the same network as nginx-stream to communicate
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus_server
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command: --config.file=/etc/prometheus/prometheus.yml --web.enable-lifecycle
+    restart: unless-stopped
+    networks:
+      - monitoring_network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana_server
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=prom_admin
+    restart: unless-stopped
+    networks:
+      - monitoring_network
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node_exporter_server
+    command:
+      - '--path.rootfs=/host'
+    volumes:
+      - '/:/host:ro'
+    ports:
+      - "9100:9100"
+    restart: unless-stopped
+    networks:
+      - monitoring_network
+
+networks:
+  # Define both networks
+  streaming_network:
+    driver: bridge
+  monitoring_network:
+    driver: bridge
+
+volumes:
+  prometheus_data:
+  grafana_data:

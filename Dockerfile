@@ -12,6 +12,7 @@ RUN apt-get update && \
     git \
     net-tools \
     procps \
+    curl \
     --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 
@@ -36,13 +37,14 @@ COPY ./certs/nginx.key /etc/nginx/certs/nginx.key
 WORKDIR /tmp/nginx-${NGINX_VERSION}
 
 RUN ./configure \
+    --with-http_stub_status_module \
     --with-http_ssl_module \
     --add-module=/tmp/nginx-rtmp-module && \
     make && \
     make install
 
 # Copia el archivo de configuración de Nginx (lo crearemos a continuación)
-COPY nginx.conf /usr/local/nginx/conf/nginx.conf
+#COPY nginx.conf /usr/local/nginx/conf/nginx.conf
 
 # Crea los directorios para los logs de Nginx y para HLS/DASH
 RUN mkdir -p /usr/local/nginx/logs && \
@@ -59,3 +61,4 @@ EXPOSE 443
 CMD ["/usr/local/nginx/sbin/nginx", "-g", "daemon off;", "-c", "/usr/local/nginx/conf/nginx.conf"]
 # Crear usuario y grupo nginx
 RUN groupadd -r nginx && useradd -r -g nginx nginx
+
