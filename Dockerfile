@@ -52,7 +52,11 @@ RUN mkdir -p /usr/local/nginx/logs && \
     mkdir -p /tmp/vod/files && \
     mkdir -p /tmp/dash
 
-# Expón los puertos necesarios: 1935 para RTMP y 80 para HTTP (HLS/DASH)
+# Crea el fichero para la página web y la copia en el contenedor
+RUN mkdir -p /usr/share/nginx/html
+COPY ./main.html /usr/share/nginx/html/main.html
+
+# Expone los puertos necesarios: 1935 para RTMP y 80 para HTTP (HLS/DASH) y 443 SSL
 EXPOSE 1935
 EXPOSE 80
 EXPOSE 443

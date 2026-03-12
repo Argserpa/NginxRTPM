@@ -1,21 +1,21 @@
 
 services:
-  # Your Nginx Streaming Server
-  nginx-stream:
-    image: nginx-rtmp-server  # This should be the image you built
-    container_name: nginx_streaming_server # Give it a unique name
-    ports:
-      - "1935:1935"
-      - "80:80"
-      - "443:443"
+  # Nginx Streaming Server
+  nginx-stream-rtpm:
+    image: nginx-rtmp-server  # Imagen creada
+    container_name: nginx_streaming_server # nombre único de la magen creada
+    ports:   # puertos necesarios para la configuración del servidor
+      - "1935:1935" # puerto de streaming a configurar en OBS studio.
+      - "81:81"     # puerto para la página donde se aloja el streaming
+      - "443:443"   # puerto https
     volumes:
-    # If you uncomment these, make sure they start with a hyphen (-)
+    # volúmenes para el nginx y los certificados
     - ../nginx.conf:/usr/local/nginx/conf/nginx.conf
     - ../certs:/usr/local/nginx/certs
     restart: unless-stopped
     networks:
-      - streaming_network # Attach to the streaming network
-      # - monitoring_network # Optional: If you want Prometheus to scrape directly on this network too
+      - streaming_network # Red para el streaming
+      # - monitoring_network # Optconal: para otras configuraciones de Prometheus
 
   # Nginx Prometheus Exporter
   nginx-exporter:
@@ -24,12 +24,12 @@ services:
     ports:
       - "9113:9113"
     environment:
-      # Now, 'nginx-stream' is the service name within this docker-compose file's network
-      NGINX_STUB_STATUS_URL: http://nginx-stream:80/nginx_status
+      # 'nginx-stream' ha de ser el nombre del servicio en este fichero. Ambos servicios deben estar en la misma red.
+      NGINX_STUB_STATUS_URL: http://nginx-stream-rtpm:80/nginx_status
     restart: unless-stopped
     networks:
       - monitoring_network
-      - streaming_network # It needs to be on the same network as nginx-stream to communicate
+      - streaming_network # debe estar en la misma red que nginx-stream-rtpm para poder comunicarse.
 
   prometheus:
     image: prom/prometheus:latest
@@ -60,7 +60,6 @@ services:
 
   node-exporter:
     image: prom/node-exporter:latest
-    container_name: node_exporter_server
     command:
       - '--path.rootfs=/host'
     volumes:
