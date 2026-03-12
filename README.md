@@ -3,7 +3,7 @@ Servidor de medios con Nginx  RTPM
 
 ## 1. Construir la imagen de Docker
 ``` bash
-    docker build -t ./nginx/nginx-rtmp-server .
+    docker build -t nginx-rtmp-server . -f ./nginx/Dockerfile
 ```
 ## 2. Ejecutar el contenedor
 Explicación de los parámetros:

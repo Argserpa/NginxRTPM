@@ -54,7 +54,7 @@ RUN mkdir -p /usr/local/nginx/logs && \
 
 # Crea el fichero para la página web y la copia en el contenedor
 RUN mkdir -p /usr/share/nginx/html
-COPY ../main.html /usr/share/nginx/html/main.html
+COPY ./nginx/html /usr/share/nginx/html
 
 # Expone los puertos necesarios: 1935 para RTMP y 80 para HTTP (HLS/DASH) y 443 SSL
 EXPOSE 1935

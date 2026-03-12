@@ -1,99 +1,52 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>WebRTC Live Viewer</title>
-    <link rel="icon" href="/images/favicon.png" type="image/x-icon"/>
-    <link rel="stylesheet" href="/css/common.css"/>
-    <link rel="stylesheet" href="/css/live.css"/>
+    <title>Video.js HLS/DASH Player</title>
+    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+    <style>
+        body { font-family: sans-serif; text-align: center; }
+        .video-container {
+            max-width: 800px; /* Tamaño máximo del reproductor */
+            margin: 50px auto; /* Centrarlo en la página */
+        }
+    </style>
 </head>
 <body>
+<h1>Mi Stream con Nginx RTMP y Video.js</h1>
 
-<div class="header">
-    <h1><span class="live-dot"></span> Live Stream</h1>
-    <nav class="header-nav">
-        <a href="/" class="active">Live Stream</a>
-        <a href="/recordings.html">Recordings</a>
-    </nav>
+<div class="video-container">
+    <video
+            id="my-video"
+            class="video-js vjs-default-skin vjs-big-play-button"
+            controls
+            preload="auto"
+            width="640"
+            height="360"
+            data-setup='{}'
+    >
+        <source src="http://localhost/live/mi_stream.m3u8" type="application/x-mpegURL">
+        <!--<source src="http://localhost/live/mi_stream.mpd" type="application/dash+xml">-->
+
+        <p class="vjs-no-js">
+            Para ver este video, por favor habilita JavaScript y considera
+            actualizar tu navegador a uno que
+            <a href="https://videojs.com/html5-video-support/" target="_blank"
+            >soporte video HTML5</a
+            >
+        </p>
+    </video>
 </div>
 
-<div class="content">
-    <video id="video" autoplay playsinline controls></video>
-    <div class="controls">
-        <button onclick="startPlayback()">&#9654; Start playback</button>
-        <span class="latency-badge" id="latencyDisplay">RTT: --</span>
-    </div>
-</div>
+<script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+<script src="https://unpkg.com/@videojs/http-streaming@3.9.0/dist/videojs-http-streaming.min.js"></script>
 
 <script>
-    let pc;
-    let metricsChannel;
-    let latencyInterval;
-    const videoEl = document.getElementById('video');
-    const latencyDisplay = document.getElementById('latencyDisplay');
-
-    async function startPlayback() {
-        try { await videoEl.play(); } catch (e) { console.warn("User gesture required:", e); }
-    }
-
-    async function initWebRTC() {
-        pc = new RTCPeerConnection({
-            iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
-        });
-
-        pc.oniceconnectionstatechange = () => console.log("ICE state:", pc.iceConnectionState);
-        pc.onconnectionstatechange = () => console.log("Peer state:", pc.connectionState);
-
-        pc.addTransceiver("video", { direction: "recvonly" });
-        pc.addTransceiver("audio", { direction: "recvonly" });
-
-        pc.ontrack = (event) => {
-            if (event.receiver) {
-                try { event.receiver.playoutDelayHint = 0; } catch(e) {}
-                try { event.receiver.jitterBufferTarget = 0; } catch(e) {}
-            }
-            if (!videoEl.srcObject) videoEl.srcObject = event.streams[0];
-        };
-
-        metricsChannel = pc.createDataChannel("metrics", { ordered: false });
-        metricsChannel.onopen = () => { latencyInterval = setInterval(sendLatencyPing, 5000); };
-        metricsChannel.onclose = () => { if (latencyInterval) clearInterval(latencyInterval); };
-        metricsChannel.onmessage = (event) => {
-            try {
-                const data = JSON.parse(event.data);
-                if (data.type === "latency_pong") {
-                    const rtt = performance.now() - data.timestamp;
-                    latencyDisplay.textContent = "RTT: " + rtt.toFixed(1) + " ms";
-                    if (metricsChannel.readyState === "open") {
-                        metricsChannel.send(JSON.stringify({ type: "latency_report", latency: rtt }));
-                    }
-                }
-            } catch (e) { console.error("Error parsing pong:", e); }
-        };
-
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
-
-        const resp = await fetch("/offer", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(pc.localDescription)
-        });
-        if (!resp.ok) throw new Error("Failed to fetch WebRTC answer: " + resp.status);
-
-        const answer = await resp.json();
-        await pc.setRemoteDescription(answer);
-        console.log("WebRTC signaling completed");
-    }
-
-    function sendLatencyPing() {
-        if (metricsChannel && metricsChannel.readyState === "open") {
-            metricsChannel.send(JSON.stringify({ type: "latency_ping", timestamp: performance.now() }));
-        }
-    }
-
-    initWebRTC().catch(e => { console.error(e); alert("WebRTC init failed: " + e); });
+    // Inicializa Video.js
+    var player = videojs('my-video');
+    // Puedes agregar eventos o lógica adicional aquí si lo necesitas
+    player.on('error', function() {
+        console.error('Video.js error:', player.error());
+    });
 </script>
 </body>
 </html>

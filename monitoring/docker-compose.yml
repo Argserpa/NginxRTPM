@@ -10,7 +10,7 @@ services:
       - "443:443"   # puerto https
     volumes:
     # volúmenes para el nginx y los certificados
-    - ../nginx.conf:/usr/local/nginx/conf/nginx.conf
+    - ../nginx/nginx.conf:/usr/local/nginx/conf/nginx.conf
     - ../certs:/usr/local/nginx/certs
     restart: unless-stopped
     networks:
