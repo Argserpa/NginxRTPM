@@ -43,8 +43,8 @@ RUN ./configure \
     make && \
     make install
 
-# Copia el archivo de configuración de Nginx (lo crearemos a continuación)
-#COPY nginx.conf /usr/local/nginx/conf/nginx.conf
+# Copia el archivo de configuración de Nginx
+COPY nginx.conf /usr/local/nginx/conf/nginx.conf
 
 # Crea los directorios para los logs de Nginx y para HLS/DASH
 RUN mkdir -p /usr/local/nginx/logs && \

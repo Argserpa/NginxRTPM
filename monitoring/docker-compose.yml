@@ -6,7 +6,7 @@ services:
     container_name: nginx_streaming_server # nombre único de la magen creada
     ports:   # puertos necesarios para la configuración del servidor
       - "1935:1935" # puerto de streaming a configurar en OBS studio.
-      - "81:81"     # puerto para la página donde se aloja el streaming
+      - "80:80"     # puerto para la página donde se aloja el streaming
       - "443:443"   # puerto https
     volumes:
     # volúmenes para el nginx y los certificados

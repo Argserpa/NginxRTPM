@@ -44,3 +44,8 @@ para el stream
 sudo ss -tlnp | grep :80
 sudo systemctl stop nginx
 ```
+
+### Recargar nginx
+``` bash
+docker exec nginx-stream-rtpm /usr/local/nginx/sbin/nginx -s reload
+```
