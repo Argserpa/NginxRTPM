@@ -1,0 +1,236 @@
+/* ---- HEADER ACCENT ---- */
+.header h1 span {
+    color: var(--accent);
+}
+
+/* ---- LAYOUT ---- */
+.layout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    min-height: calc(100vh - 61px);
+}
+
+/* ---- SIDEBAR ---- */
+.sidebar {
+    border-right: 1px solid var(--border);
+    background: var(--surface);
+    padding: 20px 0;
+    overflow-y: auto;
+}
+
+.sidebar-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    padding: 0 20px 12px;
+}
+
+.sidebar-empty {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 14px;
+}
+
+/* ---- DATE ITEMS ---- */
+.date-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+}
+
+.date-item:hover {
+    background: var(--surface-2);
+}
+
+.date-item.active {
+    background: var(--accent-soft);
+    border-left-color: var(--accent);
+}
+
+.date-item .date-label {
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.date-item .date-count {
+    font-size: 12px;
+    color: var(--text-dim);
+    background: var(--surface-2);
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+.date-item.active .date-count {
+    background: var(--accent);
+    color: white;
+}
+
+/* ---- MAIN CONTENT ---- */
+.main {
+    padding: 28px 32px;
+    overflow-y: auto;
+}
+
+.main-title {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    letter-spacing: -0.02em;
+}
+
+.main-subtitle {
+    font-size: 14px;
+    color: var(--text-dim);
+    margin-bottom: 24px;
+}
+
+/* ---- VIDEO PLAYER ---- */
+.player-container {
+    display: none;
+    margin-bottom: 28px;
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+.player-container.visible {
+    display: block;
+}
+
+.player-container video {
+    width: 100%;
+    max-height: 60vh;
+    display: block;
+}
+
+.player-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+}
+
+.player-info .now-playing {
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--green);
+}
+
+.player-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.player-btn {
+    font-size: 13px;
+    color: var(--text-dim);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    padding: 4px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-decoration: none;
+}
+
+.player-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+.player-btn.close:hover {
+    color: var(--danger);
+    border-color: var(--danger);
+}
+
+/* ---- RECORDINGS GRID ---- */
+.recordings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+}
+
+.recording-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.recording-card:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    transform: translateY(-1px);
+}
+
+.recording-card.playing {
+    border-color: var(--green);
+    background: rgba(52, 211, 153, 0.08);
+}
+
+.card-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: var(--surface-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 18px;
+}
+
+.recording-card.playing .card-icon {
+    background: rgba(52, 211, 153, 0.15);
+}
+
+.card-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.card-time {
+    font-size: 16px;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.card-meta {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 2px;
+}
+
+/* ---- RESPONSIVE ---- */
+@media (max-width: 768px) {
+    .layout {
+        grid-template-columns: 1fr;
+    }
+    .sidebar {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        max-height: 200px;
+    }
+    .main {
+        padding: 20px 16px;
+    }
+    .header {
+        padding: 12px 16px;
+    }
+}

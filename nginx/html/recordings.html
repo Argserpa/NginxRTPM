@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Recordings</title>
+    <link rel="icon" href="/images/favicon.png" type="image/x-icon"/>
+    <link rel="stylesheet" href="/css/common.css"/>
+    <link rel="stylesheet" href="/css/recordings.css"/>
+</head>
+<body>
+
+<div class="header">
+    <h1><span>&#9679;</span> Recordings</h1>
+    <nav class="header-nav">
+        <a href="/">Live Stream</a>
+        <a href="/recordings.html" class="active">Recordings</a>
+    </nav>
+</div>
+
+<div class="layout">
+    <div class="sidebar">
+        <div class="sidebar-title">Dates</div>
+        <div id="dateList">
+            <div class="sidebar-empty">
+                <div class="loading-spinner"></div>
+                <p style="margin-top:12px">Loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="player-container" id="playerContainer">
+            <video id="videoPlayer" controls></video>
+            <div class="player-info">
+                <span class="now-playing" id="nowPlaying">-</span>
+                <div class="player-buttons">
+                    <a class="player-btn" id="downloadBtn" href="#" download>Download</a>
+                    <button class="player-btn close" onclick="closePlayer()">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="main-title" id="mainTitle">Select a date</h2>
+        <p class="main-subtitle" id="mainSubtitle">Choose a date from the sidebar to view recordings</p>
+
+        <div id="content">
+            <div class="empty-state">
+                <div class="emoji">&#128249;</div>
+                <p>Select a date from the sidebar to browse recorded sessions.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+<script>
+    let currentDate = null;
+    let currentHls = null;
+
+    async function loadDates() {
+        try {
+            const resp = await fetch('/api/recordings');
+            const data = await resp.json();
+            renderDates(data.dates);
+        } catch (e) {
+            console.error('Error loading dates:', e);
+            document.getElementById('dateList').innerHTML = '<div class="sidebar-empty">Error loading dates</div>';
+        }
+    }
+
+    function renderDates(dates) {
+        const container = document.getElementById('dateList');
+        if (!dates || dates.length === 0) {
+            container.innerHTML = '<div class="sidebar-empty">No recordings yet</div>';
+            return;
+        }
+        container.innerHTML = dates.map(d => `
+            <div class="date-item" data-date="${d.date}" onclick="selectDate('${d.date}')">
+                <span class="date-label">${d.date}</span>
+                <span class="date-count">${d.count}</span>
+            </div>
+        `).join('');
+        selectDate(dates[0].date);
+    }
+
+    async function selectDate(dateStr) {
+        currentDate = dateStr;
+        document.querySelectorAll('.date-item').forEach(el => {
+            el.classList.toggle('active', el.dataset.date === dateStr);
+        });
+        document.getElementById('mainTitle').textContent = formatDate(dateStr);
+        document.getElementById('mainSubtitle').textContent = 'Loading recordings...';
+        document.getElementById('content').innerHTML =
+            '<div style="text-align:center;padding:40px"><div class="loading-spinner"></div></div>';
+        try {
+            const resp = await fetch(`/api/recordings/${dateStr}`);
+            const data = await resp.json();
+            renderRecordings(data.files);
+        } catch (e) {
+            console.error('Error loading recordings:', e);
+            document.getElementById('content').innerHTML =
+                '<div class="empty-state"><p>Error loading recordings</p></div>';
+        }
+    }
+
+    function renderRecordings(files) {
+        const subtitle = document.getElementById('mainSubtitle');
+        if (!files || files.length === 0) {
+            subtitle.textContent = 'No recordings found for this date';
+            document.getElementById('content').innerHTML =
+                '<div class="empty-state"><div class="emoji">&#128193;</div><p>No recordings for this date</p></div>';
+            return;
+        }
+        subtitle.textContent = `${files.length} recording${files.length !== 1 ? 's' : ''}`;
+
+        const grid = document.createElement('div');
+        grid.className = 'recordings-grid';
+        files.forEach(file => {
+            const card = document.createElement('div');
+            card.className = 'recording-card';
+            card.onclick = () => playRecording(file, card);
+            card.innerHTML = `
+                <div class="card-icon">&#9654;</div>
+                <div class="card-details">
+                    <div class="card-time">${file.display_time}</div>
+                    <div class="card-meta">${file.size_mb} MB</div>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+        document.getElementById('content').innerHTML = '';
+        document.getElementById('content').appendChild(grid);
+    }
+
+    function playRecording(file, cardEl) {
+        const video = document.getElementById('videoPlayer');
+        const container = document.getElementById('playerContainer');
+
+        if (currentHls) {
+            currentHls.destroy();
+            currentHls = null;
+        }
+
+        document.querySelectorAll('.recording-card.playing').forEach(el => el.classList.remove('playing'));
+        cardEl.classList.add('playing');
+
+        if (Hls.isSupported()) {
+            currentHls = new Hls();
+            currentHls.loadSource(file.url);
+            currentHls.attachMedia(video);
+            currentHls.on(Hls.Events.MANIFEST_PARSED, () => {
+                video.play().catch(() => {});
+            });
+            currentHls.on(Hls.Events.ERROR, (event, data) => {
+                console.error('HLS error:', data);
+            });
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = file.url;
+            video.play().catch(() => {});
+        }
+
+        document.getElementById('downloadBtn').href = file.download_url;
+        document.getElementById('nowPlaying').textContent = `${currentDate}  ${file.display_time}`;
+        container.classList.add('visible');
+        container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function closePlayer() {
+        const video = document.getElementById('videoPlayer');
+        if (currentHls) {
+            currentHls.destroy();
+            currentHls = null;
+        }
+        video.pause();
+        video.removeAttribute('src');
+        document.getElementById('playerContainer').classList.remove('visible');
+        document.querySelectorAll('.recording-card.playing').forEach(el => el.classList.remove('playing'));
+    }
+
+    function formatDate(dateStr) {
+        try {
+            const d = new Date(dateStr + 'T00:00:00');
+            return d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        } catch { return dateStr; }
+    }
+
+    loadDates();
+</script>
+</body>
+</html>

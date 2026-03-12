@@ -30,8 +30,8 @@ ENV NGINX_RTMP_MODULE_VERSION=1.2.2
 RUN git clone https://github.com/arut/nginx-rtmp-module.git /tmp/nginx-rtmp-module
 
 # Copia los certificados SSL (Asegúrate de que existan en tu directorio local './certs')
-COPY ./certs/nginx.crt /etc/nginx/certs/nginx.crt
-COPY ./certs/nginx.key /etc/nginx/certs/nginx.key
+COPY ../certs/nginx.crt /etc/nginx/certs/nginx.crt
+COPY ../certs/nginx.key /etc/nginx/certs/nginx.key
 
 # Compila Nginx con el módulo RTMP
 WORKDIR /tmp/nginx-${NGINX_VERSION}
@@ -54,7 +54,7 @@ RUN mkdir -p /usr/local/nginx/logs && \
 
 # Crea el fichero para la página web y la copia en el contenedor
 RUN mkdir -p /usr/share/nginx/html
-COPY ./main.html /usr/share/nginx/html/main.html
+COPY ../main.html /usr/share/nginx/html/main.html
 
 # Expone los puertos necesarios: 1935 para RTMP y 80 para HTTP (HLS/DASH) y 443 SSL
 EXPOSE 1935
