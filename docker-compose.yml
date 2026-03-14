@@ -34,6 +34,26 @@ services:
       - monitoring_network
       - streaming_network
 
+  # ── RTMP Exporter (usuarios, bitrate, uptime del stream) ───────────────────
+  rtmp-exporter:
+    build:
+      context: ./monitoring/rtmp-exporter
+      dockerfile: Dockerfile
+    image: rtmp-exporter
+    container_name: rtmp_exporter
+    ports:
+      - "9114:9114"
+    environment:
+      NGINX_STAT_URL: http://nginx-stream-rtpm:80/stat
+      EXPORTER_PORT: "9114"
+      SCRAPE_TIMEOUT: "5"
+    depends_on:
+      - nginx-stream-rtpm
+    restart: unless-stopped
+    networks:
+      - monitoring_network
+      - streaming_network
+
   # ── Prometheus ─────────────────────────────────────────────────────────────
   prometheus:
     image: prom/prometheus:latest

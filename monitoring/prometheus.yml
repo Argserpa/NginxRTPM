@@ -2,6 +2,8 @@ global:
   scrape_interval: 15s # Raspa cada 15 segundos
 
 scrape_configs:
+
+  # Conexiones HTTP activas y estado de nginx
   - job_name: 'nginx'
     # Añadir esto para permitir Prometeo raspar los propios puntos finales de Prometeo
     # static_configs:
@@ -12,6 +14,14 @@ scrape_configs:
     metrics_path: /metrics # La ruta por defecto para Node Exporter y Nginx Exporter
     static_configs:
       - targets: ['nginx-exporter:9113'] # El 'nginx-exporter' es el nombre del servicio Docker (ver docker-compose.yml)
+        labels:
+          instance: nginx_stream_server
+
+  # Usuarios conectados, bitrate y uptime del stream RTMP
+  - job_name: 'rtmp'
+    metrics_path: /metrics
+    static_configs:
+      - targets: [ 'rtmp-exporter:9114' ]
         labels:
           instance: nginx_stream_server
 
