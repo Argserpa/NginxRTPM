@@ -1,52 +1,119 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Video.js HLS/DASH Player</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NginxRTMP · Live</title>
+    <link rel="icon" href="/images/favicon.png" type="image/x-icon"/>
+    <link rel="stylesheet" href="css/common.css" />
+    <link rel="stylesheet" href="css/live.css" />
+
+    <!-- Video.js -->
     <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
-    <style>
-        body { font-family: sans-serif; text-align: center; }
-        .video-container {
-            max-width: 800px; /* Tamaño máximo del reproductor */
-            margin: 50px auto; /* Centrarlo en la página */
-        }
-    </style>
 </head>
 <body>
-<h1>Mi Stream con Nginx RTMP y Video.js</h1>
 
-<div class="video-container">
+<!-- HEADER -->
+<header class="header">
+    <h1>
+        <span class="live-dot"></span>
+        NginxRTMP
+    </h1>
+    <nav class="header-nav">
+        <a href="/" class="active">Live</a>
+    </nav>
+</header>
+
+<!-- MAIN CONTENT -->
+<main class="content">
+
+    <!-- Player -->
     <video
-            id="my-video"
-            class="video-js vjs-default-skin vjs-big-play-button"
+            id="stream-player"
+            class="video-js vjs-default-skin"
             controls
             preload="auto"
-            width="640"
-            height="360"
+            playsinline
             data-setup='{}'
     >
-        <source src="http://localhost/live/mi_stream.m3u8" type="application/x-mpegURL">
-        <!--<source src="http://localhost/live/mi_stream.mpd" type="application/dash+xml">-->
-
+        <source src="/live/mi_stream.m3u8" type="application/x-mpegURL" />
+        <source src="/live/mi_stream.mpd" type="application/dash+xml" />
         <p class="vjs-no-js">
-            Para ver este video, por favor habilita JavaScript y considera
-            actualizar tu navegador a uno que
-            <a href="https://videojs.com/html5-video-support/" target="_blank"
-            >soporte video HTML5</a
-            >
+            Habilita JavaScript para ver el stream.
         </p>
     </video>
-</div>
 
+    <!-- Controls -->
+    <div class="controls">
+        <button id="btn-reload">↺ Recargar stream</button>
+        <span class="latency-badge" id="latency-label">HLS · esperando…</span>
+        <button id="btn-fullscreen">⛶ Pantalla completa</button>
+    </div>
+
+    <!-- Info strip -->
+    <div class="stream-info">
+        <span class="stream-key">stream key: <span>mi_stream</span></span>
+        <span class="status-dot" id="status-dot">Offline</span>
+    </div>
+
+    <!-- Endpoints -->
+    <p class="section-label">Endpoints disponibles</p>
+    <div class="proto-list">
+        <a class="proto-tag" href="/live/mi_stream.m3u8" target="_blank">HLS · .m3u8</a>
+        <a class="proto-tag" href="/live/mi_stream.mpd"  target="_blank">DASH · .mpd</a>
+        <a class="proto-tag" href="rtmp://localhost:1935/live/mi_stream" target="_blank">RTMP · 1935</a>
+    </div>
+
+</main>
+
+<!-- Scripts -->
 <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
 <script src="https://unpkg.com/@videojs/http-streaming@3.9.0/dist/videojs-http-streaming.min.js"></script>
 
 <script>
-    // Inicializa Video.js
-    var player = videojs('my-video');
-    // Puedes agregar eventos o lógica adicional aquí si lo necesitas
-    player.on('error', function() {
-        console.error('Video.js error:', player.error());
+    var player = videojs('stream-player', {
+        liveui: true,
+        html5: {
+            vhs: {
+                enableLowInitialPlaylist: true,
+                smoothQualityChange: true
+            }
+        }
+    });
+
+    var statusDot   = document.getElementById('status-dot');
+    var latencyLabel = document.getElementById('latency-label');
+
+    // Detectar si el stream está vivo
+    player.on('playing', function () {
+        statusDot.textContent = 'En directo';
+        statusDot.classList.add('live');
+        latencyLabel.textContent = 'HLS · en vivo';
+    });
+
+    player.on('pause',  function () {
+        statusDot.textContent = 'Pausado';
+        statusDot.classList.remove('live');
+    });
+
+    player.on('error',  function () {
+        statusDot.textContent = 'Offline';
+        statusDot.classList.remove('live');
+        latencyLabel.textContent = 'HLS · sin señal';
+    });
+
+    // Botón recargar
+    document.getElementById('btn-reload').addEventListener('click', function () {
+        var src = player.currentSrc();
+        player.src({ src: src, type: 'application/x-mpegURL' });
+        player.play();
+    });
+
+    // Botón pantalla completa
+    document.getElementById('btn-fullscreen').addEventListener('click', function () {
+        player.requestFullscreen();
     });
 </script>
+
 </body>
 </html>

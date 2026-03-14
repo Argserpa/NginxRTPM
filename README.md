@@ -1,5 +1,5 @@
-# NginxRTPM
-Servidor de medios con Nginx  RTPM
+# NginxRTMP
+Servidor de medios con Nginx  RTMP
 
 ## 1. Construir la imagen de Docker
 ``` bash
@@ -9,24 +9,24 @@ Servidor de medios con Nginx  RTPM
 Explicación de los parámetros:
  - -p 1935:1935 mapea el puerto RTMP del host al contenedor
  - -p 80:80 mapea el puerto HTTP del host al contenedor
- - --name nginx-stream-rtpm para darle un nombre al contenedor
+ - --name nginx-stream-rtmp para darle un nombre al contenedor
 ``` bash    
     
-    docker run -d -p 1935:1935 -p 80:80 -p 443:443 --name nginx-stream-rtpm --network streaming_network nginx-rtmp-server &&  docker logs -f nginx-stream-rtpm
+    docker run -d -p 1935:1935 -p 80:80 -p 443:443 --name nginx-stream-rtmp --network streaming_network nginx-rtmp-server &&  docker logs -f nginx-stream-rtmp
 ```
 ejecutar bash del contenedor
 ``` bash
-    docker exec -it nginx-stream-rtpm /bin/bash   
+    docker exec -it nginx-stream-rtmp /bin/bash   
 ```
 Debuggear errores en la emisión
 ``` bash       
-    docker exec -it nginx-stream-rtpm netstat -tulnp
+    docker exec -it nginx-stream-rtmp netstat -tulnp
 ```
 pasos para la ejecución y el despliegue y redespliegue de la aplicación:
 se para y elimina el contenedor.
 ``` bash
-docker stop nginx-stream-rtpm
-docker rm nginx-stream-rtpm
+docker stop nginx-stream-rtmp
+docker rm nginx-stream-rtmp
 ``` 
 se construye (paso 1) y se ejecuta el contenedor (paso 2).
 para probarlo se 
@@ -42,10 +42,36 @@ para el stream
 
 ``` bash
 sudo ss -tlnp | grep :80
+```
+
+### parar nginx
+``` bash
 sudo systemctl stop nginx
 ```
 
 ### Recargar nginx
 ``` bash
-docker exec nginx-stream-rtpm /usr/local/nginx/sbin/nginx -s reload
+docker exec nginx-stream-rtmp /usr/local/nginx/sbin/nginx -s reload
+```
+
+
+# Construir y levantar todo
+``` bash
+docker compose up -d --build
+```
+# Ver logs de todos los servicios
+``` bash
+docker compose logs -f
+```
+# Solo logs de nginx
+``` bash
+docker compose logs -f nginx-stream-rtpm
+```
+# Parar todo
+``` bash
+docker compose down
+```
+# Parar y borrar volúmenes (Prometheus + Grafana data)
+``` bash
+docker compose down -v
 ```

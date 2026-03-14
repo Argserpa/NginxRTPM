@@ -67,3 +67,119 @@
     border-radius: 8px;
     border: 1px solid rgba(52, 211, 153, 0.2);
 }
+
+
+.video-js {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16/9;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: #000;
+}
+
+.video-js .vjs-big-play-button {
+    background: var(--accent-soft);
+    border: 2px solid var(--accent);
+    border-radius: 50%;
+    width: 64px;
+    height: 64px;
+    line-height: 60px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin: 0;
+}
+
+.video-js:hover .vjs-big-play-button {
+    background: var(--accent);
+}
+
+.video-js .vjs-control-bar {
+    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    border-radius: 0 0 12px 12px;
+}
+
+/* Info strip debajo del player */
+.stream-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 16px;
+    padding: 14px 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
+
+.stream-info .stream-key {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--text-dim);
+}
+
+.stream-info .stream-key span {
+    color: var(--text);
+}
+
+.status-dot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.status-dot::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--danger);
+    transition: background 0.3s;
+}
+
+.status-dot.live::before {
+    background: var(--green);
+    animation: pulse-dot 2s ease-in-out infinite;
+}
+
+.status-dot.live {
+    color: var(--green);
+}
+
+/* Separador de sección */
+.section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin: 32px 0 12px;
+}
+
+/* Links de protocolo */
+.proto-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.proto-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border: 1px solid rgba(78, 143, 255, 0.2);
+    padding: 5px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all 0.15s;
+}
+
+.proto-tag:hover {
+    background: var(--accent);
+    color: #fff;
+}

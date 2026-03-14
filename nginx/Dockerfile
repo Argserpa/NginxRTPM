@@ -43,8 +43,6 @@ RUN ./configure \
     make && \
     make install
 
-# Copia el archivo de configuración de Nginx
-COPY nginx.conf /usr/local/nginx/conf/nginx.conf
 
 # Crea los directorios para los logs de Nginx y para HLS/DASH
 RUN mkdir -p /usr/local/nginx/logs && \
@@ -55,6 +53,8 @@ RUN mkdir -p /usr/local/nginx/logs && \
 # Crea el fichero para la página web y la copia en el contenedor
 RUN mkdir -p /usr/share/nginx/html
 COPY ./nginx/html /usr/share/nginx/html
+# Copia el archivo de configuración de Nginx
+COPY ./nginx/nginx.conf /usr/local/nginx/conf/nginx.conf
 
 # Expone los puertos necesarios: 1935 para RTMP y 80 para HTTP (HLS/DASH) y 443 SSL
 EXPOSE 1935

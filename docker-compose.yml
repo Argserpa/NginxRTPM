@@ -1,0 +1,97 @@
+services:
+
+  # ── Nginx Streaming Server ─────────────────────────────────────────────────
+  nginx-stream-rtpm:
+    build:
+     # context: monitoring                      # contexto = raíz del repo
+      dockerfile: ./nginx/Dockerfile  # Dockerfile dentro de nginx/
+    image: nginx-rtmp-server
+    container_name: nginx_streaming_server
+    ports:
+      - "1935:1935"   # RTMP  → OBS Studio
+      - "80:80"       # HTTP  → player web
+      - "443:443"     # HTTPS
+    volumes:
+      - ./nginx/nginx.conf:/usr/local/nginx/conf/nginx.conf  # config en caliente
+      - ./certs:/usr/local/nginx/certs                       # certificados SSL
+    restart: unless-stopped
+    networks:
+      - streaming_network
+      - monitoring_network   # necesario para que nginx-exporter lo alcance
+
+  # ── Nginx Prometheus Exporter ──────────────────────────────────────────────
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    container_name: nginx_prometheus_exporter
+    ports:
+      - "9113:9113"
+    environment:
+      NGINX_STUB_STATUS_URL: http://nginx-stream-rtpm:80/nginx_status
+    depends_on:
+      - nginx-stream-rtpm
+    restart: unless-stopped
+    networks:
+      - monitoring_network
+      - streaming_network
+
+  # ── Prometheus ─────────────────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus_server
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.enable-lifecycle        # permite recargar config con POST /-/reload
+    depends_on:
+      - nginx-exporter
+      - node-exporter
+    restart: unless-stopped
+    networks:
+      - monitoring_network
+
+  # ── Grafana ────────────────────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana_server
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - monitoring_network
+
+  # ── Node Exporter (métricas del host) ──────────────────────────────────────
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node_exporter_server
+    command:
+      - '--path.rootfs=/host'
+    volumes:
+      - '/:/host:ro,rslave'
+    ports:
+      - "9100:9100"
+    restart: unless-stopped
+    networks:
+      - monitoring_network
+
+# ── Redes ──────────────────────────────────────────────────────────────────
+networks:
+  streaming_network:
+    driver: bridge
+  monitoring_network:
+    driver: bridge
+
+# ── Volúmenes persistentes ─────────────────────────────────────────────────
+volumes:
+  prometheus_data:
+  grafana_data:
