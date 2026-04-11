@@ -25,16 +25,17 @@ Hay dos opciones:
 
 ```bash
 # Apuntar el CLI de Docker al daemon de Minikube
-eval $(minikube docker-env)
-
-# Construir la imagen nginx (desde la raíz del repo)
+eval $(minikube docker-env -u)
+# 2. Construir con Docker normal
 docker build -t nginx-rtmp-server:latest -f ./nginx/Dockerfile .
-
-# Construir el rtmp-exporter
 docker build -t rtmp-exporter:latest ./monitoring/rtmp-exporter/
 
+# 3. Cargar las imágenes en minikube
+minikube image load nginx-rtmp-server:latest
+minikube image load rtmp-exporter:latest
+
 # Volver al Docker del sistema (opcional)
-eval $(minikube docker-env -u)
+# eval $(minikube docker-env -u)
 ```
 
 ### Opción B — Cargar imágenes ya construidas
@@ -133,7 +134,7 @@ kubectl scale deployment grafana --replicas=1 -n streaming
 # Eliminar todo el despliegue
 kubectl delete namespace streaming
 ```
-
+para exponer
 
 
 
