@@ -21,7 +21,8 @@ docker compose down
 ``` bash
 docker compose down -v
 ```
-
+--- 
+## Comandos Habituales
 ejecutar bash del contenedor
 ``` bash
     docker exec -it nginx-stream-rtmp /bin/bash   
@@ -36,10 +37,8 @@ se para y elimina el contenedor.
 docker stop nginx-stream-rtmp
 docker rm nginx-stream-rtmp
 ``` 
- 
-
-la configuración de OBS es:
-para el stream
+---
+## Comandos útiles
 
 ### Crear una red (si no la crea automáticamente)
 ``` bash
@@ -60,5 +59,3 @@ sudo systemctl stop nginx
 ``` bash
 docker exec nginx-stream-rtmp /usr/local/nginx/sbin/nginx -s reload
 ```
-
-
