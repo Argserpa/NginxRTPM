@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-stream
+  namespace: streaming
+  labels:
+    app: nginx-stream
+spec:
+  replicas: 1  # RTMP no escala horizontalmente sin shared storage — mantener 1
+  selector:
+    matchLabels:
+      app: nginx-stream
+  template:
+    metadata:
+      labels:
+        app: nginx-stream
+    spec:
+      containers:
+        - name: nginx-stream
+          image: nginx-rtmp-server:latest
+          imagePullPolicy: Never  # imagen local de minikube
+          ports:
+            - name: rtmp
+              containerPort: 1935
+              protocol: TCP
+            - name: http
+              containerPort: 80
+              protocol: TCP
+            - name: https
+              containerPort: 443
+              protocol: TCP
+          # ----- Opcional: montar nginx.conf desde ConfigMap -----
+          # pruebas:
+          #  no recompilar la imagen al cambiar la config,
+          # descomentar esto y crear un ConfigMap con el contenido de nginx.conf
+          # volumeMounts:
+          #   - name: nginx-config
+          #     mountPath: /usr/local/nginx/conf/nginx.conf
+          #     subPath: nginx.conf
+          #   - name: tls-certs
+          #     mountPath: /usr/local/nginx/certs
+          #     readOnly: true
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+      # volumes:
+      #   - name: nginx-config
+      #     configMap:
+      #       name: nginx-config
+      #   - name: tls-certs
+      #     secret:
+      #       secretName: nginx-tls  # kubectl create secret tls nginx-tls --cert=... --key=...
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-stream
+  namespace: streaming
+  labels:
+    app: nginx-stream
+spec:
+  type: LoadBalancer  # requiere: minikube tunnel (en otra terminal)
+  selector:
+    app: nginx-stream
+  ports:
+    - name: rtmp
+      port: 1935
+      targetPort: 1935
+      protocol: TCP
+    - name: http
+      port: 80
+      targetPort: 80
+      protocol: TCP
+    - name: https
+      port: 443
+      targetPort: 443
+      protocol: TCP

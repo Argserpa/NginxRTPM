@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-exporter
+  namespace: streaming
+  labels:
+    app: nginx-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-exporter
+  template:
+    metadata:
+      labels:
+        app: nginx-exporter
+    spec:
+      containers:
+        - name: nginx-exporter
+          image: nginx/nginx-prometheus-exporter:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            # !!'nginx-stream' es el nombre del Service de K8s, no el contenedor Docker
+            - name: NGINX_STUB_STATUS_URL
+              value: "http://nginx-stream:80/nginx_status"
+          ports:
+            - name: metrics
+              containerPort: 9113
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "32Mi"
+            limits:
+              cpu: "100m"
+              memory: "64Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-exporter
+  namespace: streaming
+  labels:
+    app: nginx-exporter
+spec:
+  type: ClusterIP
+  selector:
+    app: nginx-exporter
+  ports:
+    - name: metrics
+      port: 9113
+      targetPort: 9113

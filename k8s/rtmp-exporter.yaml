@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rtmp-exporter
+  namespace: streaming
+  labels:
+    app: rtmp-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rtmp-exporter
+  template:
+    metadata:
+      labels:
+        app: rtmp-exporter
+    spec:
+      containers:
+        - name: rtmp-exporter
+          image: rtmp-exporter:latest
+          imagePullPolicy: Never  # imagen local de minikube
+          env:
+            # El exporter llama a /stat de nginx. 'nginx-stream' es el Service K8s.
+            - name: NGINX_STAT_URL
+              value: "http://nginx-stream:80/stat"
+          ports:
+            - name: metrics
+              containerPort: 9114
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "32Mi"
+            limits:
+              cpu: "100m"
+              memory: "64Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rtmp-exporter
+  namespace: streaming
+  labels:
+    app: rtmp-exporter
+spec:
+  type: ClusterIP
+  selector:
+    app: rtmp-exporter
+  ports:
+    - name: metrics
+      port: 9114
+      targetPort: 9114
