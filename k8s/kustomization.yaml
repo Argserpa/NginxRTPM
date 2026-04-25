@@ -1,14 +1,23 @@
+# Kustomization
+# Kustomize agrupa y aplica todos los manifiestos del directorio con un solo
+# comando: kubectl apply -k k8s/
+#
+# El campo 'namespace' sobreescribe el namespace en todos los recursos listados,
+# actuando como un override global que evita tener que especificarlo en cada YAML.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 namespace: streaming
 
+# Orden de aplicación
+# Kustomize aplica los recursos en este orden. Se definen primero los recursos
+# base (Namespace, Secrets) porque los Deployments dependen de ellos.
 resources:
-  - 00-namespace.yaml
-  - 01-secrets.yaml
-  - nginx-stream.yaml
-  - nginx-exporter.yaml
-  - rtmp-exporter.yaml
-  - prometheus.yaml
-  - grafana.yaml
-  - node-exporter.yaml
+  - 00-namespace.yaml       # Namespace 'streaming' — debe ser el primero
+  - 01-secrets.yaml         # Secret con credenciales de Grafana
+  - nginx-stream.yaml       # Servidor RTMP principal (Deployment + Service LoadBalancer)
+  - nginx-exporter.yaml     # Exporter de métricas HTTP nginx (Deployment + Service ClusterIP)
+  - rtmp-exporter.yaml      # Exporter de métricas RTMP custom (Deployment + Service ClusterIP)
+  - prometheus.yaml         # ConfigMap + PVC + Deployment + Service ClusterIP
+  - grafana.yaml            # PVC + Deployment + Service NodePort
+  - node-exporter.yaml      # DaemonSet + Service headless (uno por nodo)

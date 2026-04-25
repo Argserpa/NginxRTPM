@@ -20,7 +20,7 @@ import xml.etree.ElementTree as ET
 import requests
 from flask import Flask, Response
 
-# ── Config ────────────────────────────────────────────────────────────────────
+# Config
 NGINX_STAT_URL = os.getenv("NGINX_STAT_URL", "http://nginx-stream-rtpm:80/stat")
 EXPORTER_PORT  = int(os.getenv("EXPORTER_PORT", "9114"))
 SCRAPE_TIMEOUT = int(os.getenv("SCRAPE_TIMEOUT", "5"))
@@ -31,7 +31,7 @@ log = logging.getLogger(__name__)
 app = Flask(__name__)
 
 
-# ── Parser ────────────────────────────────────────────────────────────────────
+# Parser
 
 def _safe_int(element, tag, default=0):
     """Devuelve el int del subelemento tag, o default si no existe."""
@@ -65,14 +65,17 @@ def fetch_rtmp_stats():
     # Uptime del servidor (segundos desde el arranque de nginx)
     uptime = _safe_int(root, "uptime")
 
+    # Recorre cada <application> (p.ej. "live") y dentro cada <stream> activo.
+    # Un mismo servidor puede tener varias aplicaciones (live, vod, etc.) y
+    # dentro de cada una varios streams simultáneos con distintas stream keys.
     streams = []
     for app_node in root.findall(".//application"):
         app_name = (app_node.findtext("name") or "unknown").strip()
         for stream_node in app_node.findall(".//stream"):
             name = (stream_node.findtext("name") or "unknown").strip()
 
-            # bw_in / bw_out están en bits/s en la spec original de nginx-rtmp
-            # los dividimos entre 8 para tenerlos en bytes/s
+            # bw_in / bw_out están en bits/s en la spec original de nginx-rtmp;
+            # se dividen entre 8 para convertir a bytes/s (convención de Prometheus)
             bw_in  = _safe_int(stream_node, "bw_in")  // 8
             bw_out = _safe_int(stream_node, "bw_out") // 8
 
@@ -90,7 +93,7 @@ def fetch_rtmp_stats():
     return {"uptime": uptime, "streams": streams}
 
 
-# ── Prometheus text format ────────────────────────────────────────────────────
+# Prometheus text format
 
 def build_metrics(stats):
     """Construye el texto en formato Prometheus exposition format."""
@@ -104,8 +107,9 @@ def build_metrics(stats):
     gauge("rtmp_server_uptime_seconds", "Segundos desde que arrancó nginx-rtmp")
     lines.append(f'rtmp_server_uptime_seconds {stats["uptime"]}')
 
-    # Si no hay streams activos, emitimos igual las métricas para que Grafana
-    # muestre cero en lugar de "no data"
+    # Si no hay streams activos, emitimos las métricas de todas formas (sin labels
+    # de stream) para que Grafana muestre 0 en lugar de "No data". Sin esto,
+    # los paneles quedan vacíos cuando no hay nadie transmitiendo.
     if not stats["streams"]:
         for metric, help_text, mtype in [
             ("rtmp_stream_clients",         "Clientes conectados al stream",        "gauge"),
@@ -152,7 +156,7 @@ def build_metrics(stats):
     return "\n".join(lines) + "\n"
 
 
-# ── Endpoints Flask ───────────────────────────────────────────────────────────
+# Endpoints Flask
 
 @app.route("/metrics")
 def metrics():
@@ -175,7 +179,7 @@ def health():
     return {"status": "ok", "target": NGINX_STAT_URL}, 200
 
 
-# ── Arranque ──────────────────────────────────────────────────────────────────
+# Arranque
 
 if __name__ == "__main__":
     log.info("rtmp-exporter arrancando en puerto %d", EXPORTER_PORT)

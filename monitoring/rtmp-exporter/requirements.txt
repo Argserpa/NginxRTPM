@@ -1,2 +1,4 @@
+# flask    : servidor web WSGI que expone los endpoints GET /metrics y GET /health
 flask==3.1.0
+# requests : cliente HTTP para hacer GET a /stat de nginx-rtmp-module (responde XML)
 requests==2.32.3

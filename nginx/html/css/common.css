@@ -1,7 +1,24 @@
+/* Fuente principal (DM Sans) y fuente monoespaciada (JetBrains Mono) cargadas
+   desde Google Fonts. DM Sans se usa para el cuerpo general; JetBrains Mono
+   para stream keys, badges técnicos y timestamps. */
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
+/* Reset básico: elimina márgenes y paddings por defecto del navegador.
+   box-sizing: border-box hace que padding y border no sumen al ancho total. */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* Variables de diseño (Design tokens)
+   Paleta oscura centralizada. Cambiar aquí afecta a todo el UI.
+   --bg        : fondo de página
+   --surface   : tarjetas y header
+   --surface-2 : superficies secundarias (hover, badges)
+   --border    : líneas divisorias
+   --text      : texto principal
+   --text-dim  : texto secundario / labels
+   --accent    : azul principal (links, estados activos)
+   --accent-soft: versión semitransparente del accent para fondos
+   --danger    : rojo de error / offline
+   --green     : verde de estado activo / en vivo */
 :root {
     --bg: #0c0e13;
     --surface: #161921;
@@ -22,7 +39,9 @@ body {
     min-height: 100vh;
 }
 
-/* ---- HEADER ---- */
+/* HEADER
+   Barra superior fija con título y navegación.
+   Compartida por todas las páginas. */
 .header {
     display: flex;
     align-items: center;
@@ -38,6 +57,7 @@ body {
     letter-spacing: -0.02em;
 }
 
+/* Links de navegación: estado normal, hover y activo */
 .header-nav a {
     color: var(--text-dim);
     text-decoration: none;
@@ -53,17 +73,21 @@ body {
     background: var(--surface-2);
 }
 
+/* La página actual resalta con el color accent */
 .header-nav a.active {
     color: var(--accent);
     background: var(--accent-soft);
 }
 
-/* ---- LOADING SPINNER ---- */
+/* LOADING SPINNER
+   Indicador de carga circular animado, reutilizable
+   en cualquier página. */
 .loading-spinner {
     display: inline-block;
     width: 20px;
     height: 20px;
     border: 2px solid var(--border);
+    /* sólo el borde superior visible */
     border-top-color: var(--accent);
     border-radius: 50%;
     animation: spin 0.6s linear infinite;
@@ -73,7 +97,9 @@ body {
     to { transform: rotate(360deg); }
 }
 
-/* ---- EMPTY STATE ---- */
+/* EMPTY STATE
+   Placeholder mostrado cuando no
+   hay contenido (p.ej. sin grabaciones). */
 .empty-state {
     text-align: center;
     padding: 80px 20px;

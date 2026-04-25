@@ -1,3 +1,7 @@
+# ConfigMap: prometheus-config
+# Almacena el contenido de prometheus.yml como dato de configuración.
+# El Deployment lo monta en /etc/prometheus/prometheus.yml para que Prometheus
+# lo lea al arrancar (o al recibir POST /-/reload con --web.enable-lifecycle).
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -6,9 +10,11 @@ metadata:
 data:
   prometheus.yml: |
     global:
+    # Frecuencia con la que Prometheus consulta a los exporters
       scrape_interval: 15s
 
     scrape_configs:
+      # Métricas HTTP de nginx (conexiones, requests/s, estado workers)
       - job_name: 'nginx'
         metrics_path: /metrics
         static_configs:
@@ -16,6 +22,7 @@ data:
             labels:
               instance: nginx_stream_server
 
+      # Métricas RTMP (clientes, bitrate, bytes, uptime por stream)
       - job_name: 'rtmp'
         metrics_path: /metrics
         static_configs:
@@ -23,14 +30,21 @@ data:
             labels:
               instance: nginx_stream_server
 
+      # Auto-monitoreo de Prometheus (memoria, goroutines, reglas evaluadas)
       - job_name: 'prometheus'
         static_configs:
           - targets: ['localhost:9090']
 
+      # Métricas del SO del nodo (CPU, RAM, disco, red)
       - job_name: 'node_exporter'
         static_configs:
           - targets: ['node-exporter:9100']
 ---
+# PersistentVolumeClaim: prometheus-pvc
+# Solicita 5 GiB de almacenamiento persistente para las series temporales de
+# Prometheus. Sin PVC, los datos se perderían al reiniciar el pod.
+# ReadWriteOnce: solo un pod puede montar este volumen a la vez (adecuado para
+# una sola réplica de Prometheus).
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -43,6 +57,9 @@ spec:
     requests:
       storage: 5Gi
 ---
+# Deployment: prometheus
+# Base de datos de series temporales. Scrapea los exporters según el ConfigMap
+# y almacena los datos en el PVC montado en /prometheus.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -60,24 +77,26 @@ spec:
       labels:
         app: prometheus
     spec:
-      # Prometheus necesita escribir en /prometheus — ajustar fsGroup si el PV lo requiere
+      # fsGroup: el proceso de Prometheus necesita escribir en /prometheus.
+      # 65534 es el GID del usuario 'nobody' que usa la imagen prom/prometheus;
+      # sin esto el PVC puede tener permisos incorrectos y el pod crashea.
       securityContext:
-        fsGroup: 65534  # grupo 'nobody' del contenedor de Prometheus
+        fsGroup: 65534
       containers:
         - name: prometheus
           image: prom/prometheus:latest
           imagePullPolicy: IfNotPresent
           args:
-            - "--config.file=/etc/prometheus/prometheus.yml"
-            - "--storage.tsdb.path=/prometheus"
-            - "--web.enable-lifecycle"
+            - "--config.file=/etc/prometheus/prometheus.yml"  # config desde ConfigMap
+            - "--storage.tsdb.path=/prometheus"               # datos en el PVC
+            - "--web.enable-lifecycle"                        # permite POST /-/reload para recargar config sin reiniciar
           ports:
             - name: web
               containerPort: 9090
           volumeMounts:
             - name: config
               mountPath: /etc/prometheus/prometheus.yml
-              subPath: prometheus.yml
+              subPath: prometheus.yml  # subPath monta solo el archivo, no el directorio completo
             - name: data
               mountPath: /prometheus
           resources:
@@ -95,6 +114,9 @@ spec:
           persistentVolumeClaim:
             claimName: prometheus-pvc
 ---
+# Service: prometheus
+# ClusterIP: Grafana accede a Prometheus internamente en prometheus:9090.
+# Para acceso externo en desarrollo usar: kubectl port-forward svc/prometheus 9090 -n streaming
 apiVersion: v1
 kind: Service
 metadata:

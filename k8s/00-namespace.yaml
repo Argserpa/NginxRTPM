@@ -1,3 +1,9 @@
+# Namespace: streaming
+# Aísla todos los recursos del proyecto (Deployments, Services, Secrets, PVCs)
+# del resto del clúster. Permite aplicar NetworkPolicies o RBAC
+# (Role Based Access Control) específicos para el stack de streaming
+# sin afectar otros namespaces.
+# Todos los demás manifiestos de k8s/ declaran 'namespace: streaming'.
 apiVersion: v1
 kind: Namespace
 metadata:
