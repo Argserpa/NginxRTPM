@@ -44,13 +44,17 @@ RUN wget http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz -O /tmp/nginx-$
 ENV NGINX_RTMP_MODULE_VERSION=1.2.2
 RUN git clone https://github.com/arut/nginx-rtmp-module.git /tmp/nginx-rtmp-module
 
-# Certificados SSL
-# Se copian en el build para habilitar el bloque HTTPS en nginx.conf.
-# REVISAR PARA PRODUCCIÓN.
-# es preferible montarlos como Secret de K8s o volumen Docker
-# para no embeber claves privadas dentro de la imagen.
-COPY ../certs/nginx.crt /etc/nginx/certs/nginx.crt
-COPY ../certs/nginx.key /etc/nginx/certs/nginx.key
+# Certificados SSL — NO se embeben en la imagen
+# En el flujo Kubernetes los certificados se montan como Secret TLS en runtime
+# (ver k8s/02-tls-secret.yaml y los bloques volumes/volumeMounts en
+# k8s/nginx-stream.yaml). Esto evita que la clave privada quede dentro de
+# la imagen y permite rotar certificados sin reconstruir.
+#
+# Si en el futuro se necesita embeberlos (no recomendado), descomentar y
+# asegurarse de que el build context sea la raíz del proyecto:
+#   docker build -t nginx-rtmp-server:latest -f ./nginx/Dockerfile .
+# COPY certs/nginx.crt /etc/nginx/certs/nginx.crt
+# COPY certs/nginx.key /etc/nginx/certs/nginx.key
 
 # Compilación de nginx con el módulo RTMP
 # --with-http_stub_status_module : habilita el endpoint /nginx_status,

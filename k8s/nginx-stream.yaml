@@ -38,9 +38,18 @@ spec:
               containerPort: 443
               protocol: TCP
 
-          # Opción: montar nginx.conf desde ConfigMap
-          # Útil para cambiar la configuración sin recompilar la imagen.
-          # Pasos: crear ConfigMap con el contenido de nginx.conf y descomentarlo.
+          # Opciones de montaje en runtime (descomentar según se necesite).
+          #
+          # 1) nginx.conf desde ConfigMap → permite cambiar config sin recompilar
+          #    la imagen. Crear primero un ConfigMap con el contenido de
+          #    nginx/nginx.conf:  kubectl create configmap nginx-config \
+          #        --from-file=nginx.conf=../nginx/nginx.conf -n streaming
+          #
+          # 2) Certificados TLS desde Secret → necesario para HTTPS:443.
+          #    El Secret se llama `nginx-tls` y se crea siguiendo las
+          #    instrucciones en k8s/02-tls-secret.yaml.
+          #    Recordar también descomentar el bloque `server { listen 443 ssl; }`
+          #    en nginx/nginx.conf.
           # volumeMounts:
           #   - name: nginx-config
           #     mountPath: /usr/local/nginx/conf/nginx.conf
@@ -67,7 +76,11 @@ spec:
       #       name: nginx-config
       #   - name: tls-certs
       #     secret:
-      #       secretName: nginx-tls  # crear con: kubectl create secret tls nginx-tls --cert=... --key=...
+      #       secretName: nginx-tls
+      #       # Crear con:
+      #       #   kubectl create secret tls nginx-tls \
+      #       #       --cert=../certs/nginx.crt --key=../certs/nginx.key -n streaming
+      #       # (Ver k8s/02-tls-secret.yaml para más detalles.)
 ---
 # Service: nginx-stream
 # Expone el Deployment externamente. LoadBalancer asigna una IP externa del

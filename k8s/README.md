@@ -45,7 +45,7 @@ minikube image load nginx-rtmp-server:latest
 minikube image load rtmp-exporter:latest
 ```
 
-> ⚠️ Con `imagePullPolicy: Never` en los manifests, Kubernetes nunca intentará
+> Con `imagePullPolicy: Never` en los manifests, Kubernetes nunca intentará
 > bajar estas imágenes de un registry externo.
 
 ---
