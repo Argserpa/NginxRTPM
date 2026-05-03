@@ -11,7 +11,7 @@ docker compose logs -f
 ```
 # Solo logs de nginx
 ``` bash
-docker compose logs -f nginx-stream-rtpm
+docker compose logs -f nginx-stream-rtmp
 ```
 # Parar todo
 ``` bash

@@ -1,4 +1,4 @@
-# NginxRTPM — Kubernetes Setup
+# NginxRTMP — Kubernetes Setup
 
 ## Requisitos
 

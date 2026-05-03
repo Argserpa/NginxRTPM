@@ -21,7 +21,7 @@ import requests
 from flask import Flask, Response
 
 # Config
-NGINX_STAT_URL = os.getenv("NGINX_STAT_URL", "http://nginx-stream-rtpm:80/stat")
+NGINX_STAT_URL = os.getenv("NGINX_STAT_URL", "http://nginx-stream-rtmp:80/stat")
 EXPORTER_PORT  = int(os.getenv("EXPORTER_PORT", "9114"))
 SCRAPE_TIMEOUT = int(os.getenv("SCRAPE_TIMEOUT", "5"))
 
